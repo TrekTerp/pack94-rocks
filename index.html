@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scouts Rock! Scavenger Hunt - Pack 94</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .nav-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+        
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+        
+        .input-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 12px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .rock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .rock-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .scout-list {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .qr-item {
+            text-align: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .qr-item canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .qr-label {
+            margin-top: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .rank {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            min-width: 40px;
+        }
+        
+        .scout-info {
+            flex: 1;
+            margin-left: 16px;
+        }
+        
+        .scout-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .rocks-found {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .code-box {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            color: #667eea;
+            letter-spacing: 2px;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .card {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            .nav-tabs, .btn {
+                display: none;
+            }
+            .qr-item {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🪨 Scouts Rock! Scavenger Hunt</h1>
+            <p class="subtitle">Pack 94 • Track your rock discoveries</p>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('find')">Find Rock</button>
+                <button class="nav-tab" onclick="showTab('leaderboard')">Leaderboard</button>
+                <button class="nav-tab" onclick="showTab('admin')">Admin</button>
+            </div>
+            
+            <!-- Find Rock Tab -->
+            <div id="find-tab" class="tab-content">
+                <div id="find-message"></div>
+                
+                <div class="input-group">
+                    <label for="scout-name">Scout's Name</label>
+                    <input type="text" id="scout-name" placeholder="Enter your name">
+                </div>
+                
+                <div class="input-group">
+                    <label for="secret-code">Secret Code (on the rock)</label>
+                    <input type="text" id="secret-code" placeholder="Enter the code from the rock" style="text-transform: uppercase;">
+                </div>
+                
+                <button class="btn" onclick="registerFind()">Register Find! 🎉</button>
+                
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+                    <p style="color: #666; font-size: 14px;">
+                        <strong>🔒 How it works:</strong> Each rock has a unique secret code. Scan the QR code on the rock card to auto-fill the code, or enter it manually. You must have the correct code to register your find!
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Leaderboard Tab -->
+            <div id="leaderboard-tab" class="tab-content" style="display: none;">
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number" id="total-rocks">0</div>
+                        <div class="stat-label">Total Rocks</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="total-finds">0</div>
+                        <div class="stat-label">Total Finds</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 16px; color: #333;">Top Scouts</h3>
+                <div id="leaderboard-list"></div>
+            </div>
+            
+            <!-- Admin Tab -->
+            <div id="admin-tab" class="tab-content" style="display: none;">
+                <div id="admin-login" style="display: block;">
+                    <h3 style="margin-bottom: 16px; color: #333;">🔒 Admin Access</h3>
+                    <p style="color: #666; margin-bottom: 16px; font-size: 14px;">Enter the admin password to access settings and view data.</p>
+                    
+                    <div class="input-group">
+                        <label for="admin-password">Password</label>
+                        <input type="password" id="admin-password" placeholder="Enter admin password">
+                    </div>
+                    
+                    <button class="btn" onclick="checkAdminPassword()">Unlock Admin</button>
+                    
+                    <div style="margin-top: 24px; padding: 16px; background: #e7f3ff; border-radius: 8px; border: 1px solid #2196F3;">
+                        <p style="color: #1976D2; font-size: 13px; margin: 0;">
+                            <strong>First time setup:</strong> The default password is <code style="background: white; padding: 2px 6px; border-radius: 4px;">scout123</code>. You can change it after logging in.
+                        </p>
+                    </div>
+                </div>
+                
+                <div id="admin-content" style="display: none;">
+                <h3 style="margin-bottom: 16px; color: #333;">Setup Rocks</h3>
+                
+                <div class="input-group">
+                    <label for="rock-names">Rock Names (one per line)</label>
+                    <textarea id="rock-names" rows="6" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; font-family: inherit;" placeholder="Red Dragon&#10;Blue Butterfly&#10;Golden Eagle&#10;Silver Wolf"></textarea>
+                </div>
+                
+                <button class="btn" onclick="setupRocks()">Save Rocks & Generate Codes</button>
+                
+                <div id="codes-display" style="display: none; margin-top: 24px; padding: 20px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107;">
+                    <h3 style="margin-bottom: 16px; color: #856404;">🔑 Secret Codes - Write These on Your Rocks!</h3>
+                    <p style="color: #856404; margin-bottom: 16px; font-size: 14px;">
+                        <strong>IMPORTANT:</strong> Copy these codes and write/attach them to each rock or rock card. Scouts will need to enter the correct code to register their find.
+                    </p>
+                    <div id="codes-list" style="font-family: monospace; font-size: 16px;"></div>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="generateQRCodes()" style="margin-top: 16px;">Generate QR Codes for Printing</button>
+                
+                <div id="qr-codes" style="display: none;">
+                    <h3 style="margin: 24px 0 16px; color: #333;">QR Codes (Print These!)</h3>
+                    <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+                        Print these QR codes and attach them to your rock cards. When scouts scan them, the secret code will be automatically filled in - they just need to enter their name! The code is also printed on each card in case someone needs to type it manually.
+                    </p>
+                    <div id="qr-grid" class="qr-grid"></div>
+                </div>
+                
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+                    <h3 style="margin-bottom: 16px; color: #333;">All Discoveries</h3>
+                    <div id="admin-list"></div>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="resetData()" style="margin-top: 16px; background: #dc3545;">
+                    Reset All Data
+                </button>
+                
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+                    <h3 style="margin-bottom: 16px; color: #333;">Change Admin Password</h3>
+                    
+                    <div class="input-group">
+                        <label for="new-password">New Password</label>
+                        <input type="password" id="new-password" placeholder="Enter new password">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" placeholder="Confirm new password">
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="logoutAdmin()" style="margin-top: 24px; background: #6c757d;">
+                    Logout
+                </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Storage keys
+        const ROCKS_KEY = 'scouts_rocks';
+        const DISCOVERIES_KEY = 'scouts_discoveries';
+        const ADMIN_PASSWORD_KEY = 'scouts_admin_password';
+        const DEFAULT_PASSWORD = 'scout123';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLeaderboard();
+            updateAdminView();
+            
+            // Auto-uppercase secret code input
+            document.getElementById('secret-code').addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
+            });
+            
+            // Allow Enter key for admin password
+            document.getElementById('admin-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkAdminPassword();
+                }
+            });
+            
+            // Check for code parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const codeParam = urlParams.get('code');
+            if (codeParam) {
+                document.getElementById('secret-code').value = codeParam.toUpperCase();
+                document.getElementById('scout-name').focus();
+                
+                // Find and display rock name
+                const rocks = getRocks();
+                const rockEntry = rocks.find(r => r.code === codeParam.toUpperCase());
+                if (rockEntry) {
+                    const messageDiv = document.getElementById('find-message');
+                    showMessage(messageDiv, `🪨 You found: ${rockEntry.name}! Enter your name to register.`, 'success');
+                }
+            }
+        });
+        
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Update data when switching to leaderboard or admin
+            if (tabName === 'leaderboard') {
+                updateLeaderboard();
+            } else if (tabName === 'admin') {
+                // Check if admin is logged in
+                const isLoggedIn = sessionStorage.getItem('admin_logged_in') === 'true';
+                if (isLoggedIn) {
+                    document.getElementById('admin-login').style.display = 'none';
+                    document.getElementById('admin-content').style.display = 'block';
+                    updateAdminView();
+                } else {
+                    document.getElementById('admin-login').style.display = 'block';
+                    document.getElementById('admin-content').style.display = 'none';
+                }
+            }
+        }
+        
+        // Generate a random code
+        function generateCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar chars
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+        
+        // Admin password functions
+        function getAdminPassword() {
+            const stored = localStorage.getItem(ADMIN_PASSWORD_KEY);
+            return stored || DEFAULT_PASSWORD;
+        }
+        
+        function checkAdminPassword() {
+            const entered = document.getElementById('admin-password').value;
+            const correct = getAdminPassword();
+            
+            if (entered === correct) {
+                sessionStorage.setItem('admin_logged_in', 'true');
+                document.getElementById('admin-login').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                document.getElementById('admin-password').value = '';
+                updateAdminView();
+            } else {
+                alert('❌ Incorrect password!');
+                document.getElementById('admin-password').value = '';
+            }
+        }
+        
+        function changePassword() {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (!newPassword) {
+                alert('Please enter a new password!');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                alert('Password must be at least 4 characters!');
+                return;
+            }
+            
+            localStorage.setItem(ADMIN_PASSWORD_KEY, newPassword);
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            alert('✅ Password updated successfully!');
+        }
+        
+        function logoutAdmin() {
+            sessionStorage.removeItem('admin_logged_in');
+            document.getElementById('admin-login').style.display = 'block';
+            document.getElementById('admin-content').style.display = 'none';
+            
+            // Switch to Find Rock tab
+            showTab('find');
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab')[0].classList.add('active');
+        }
+        
+        // Register a find
+        function registerFind() {
+            const scoutName = document.getElementById('scout-name').value.trim();
+            const secretCode = document.getElementById('secret-code').value.trim().toUpperCase();
+            const messageDiv = document.getElementById('find-message');
+            
+            if (!scoutName) {
+                showMessage(messageDiv, 'Please enter your name!', 'error');
+                return;
+            }
+            
+            if (!secretCode) {
+                showMessage(messageDiv, 'Please enter the secret code from the rock!', 'error');
+                return;
+            }
+            
+            // Validate code and find rock
+            const rocks = getRocks();
+            const rockEntry = rocks.find(r => r.code === secretCode);
+            
+            if (!rockEntry) {
+                showMessage(messageDiv, '❌ Invalid code! Check the code on the rock and try again.', 'error');
+                return;
+            }
+            
+            // Check if scout already found this rock
+            const discoveries = getDiscoveries();
+            const alreadyFound = discoveries.find(d => 
+                d.scout.toLowerCase() === scoutName.toLowerCase() && 
+                d.rock === rockEntry.name
+            );
+            
+            if (alreadyFound) {
+                showMessage(messageDiv, `You already found ${rockEntry.name}! Try finding a different rock.`, 'error');
+                return;
+            }
+            
+            // Save discovery
+            const discovery = {
+                scout: scoutName,
+                rock: rockEntry.name,
+                timestamp: new Date().toISOString()
+            };
+            discoveries.push(discovery);
+            saveDiscoveries(discoveries);
+            
+            // Show success message
+            showMessage(messageDiv, `🎉 Awesome! ${scoutName} found ${rockEntry.name}!`, 'success');
+            
+            // Clear form
+            document.getElementById('scout-name').value = '';
+            document.getElementById('secret-code').value = '';
+            
+            // Update leaderboard in case they switch tabs
+            updateLeaderboard();
+        }
+        
+        // Setup rocks
+        function setupRocks() {
+            const rockNames = document.getElementById('rock-names').value
+                .split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+            
+            if (rockNames.length === 0) {
+                alert('Please enter at least one rock name!');
+                return;
+            }
+            
+            // Generate rocks with codes
+            const rocks = rockNames.map(name => ({
+                name: name,
+                code: generateCode()
+            }));
+            
+            saveRocks(rocks);
+            
+            // Display codes
+            const codesDisplay = document.getElementById('codes-display');
+            const codesList = document.getElementById('codes-list');
+            
+            codesList.innerHTML = rocks.map(rock => `
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ffc107;">
+                    <strong>${rock.name}:</strong>
+                    <span style="color: #667eea; font-weight: 700; font-size: 18px;">${rock.code}</span>
+                </div>
+            `).join('');
+            
+            codesDisplay.style.display = 'block';
+            
+            alert(`Successfully saved ${rocks.length} rocks with secret codes!`);
+            updateAdminView();
+        }
+        
+        // Generate QR codes
+        function generateQRCodes() {
+            const rocks = getRocks();
+            
+            if (rocks.length === 0) {
+                alert('Please set up rocks first!');
+                return;
+            }
+            
+            const qrGrid = document.getElementById('qr-grid');
+            const qrCodesDiv = document.getElementById('qr-codes');
+            qrGrid.innerHTML = '';
+            
+            const baseUrl = window.location.href.split('?')[0];
+            
+            rocks.forEach(rock => {
+                const qrItem = document.createElement('div');
+                qrItem.className = 'qr-item';
+                
+                const canvas = document.createElement('canvas');
+                const label = document.createElement('div');
+                label.className = 'qr-label';
+                label.innerHTML = `<strong>${rock.name}</strong><br>Code: ${rock.code}`;
+                
+                qrItem.appendChild(canvas);
+                qrItem.appendChild(label);
+                qrGrid.appendChild(qrItem);
+                
+                // QR code includes the secret code in URL
+                const url = `${baseUrl}?code=${rock.code}`;
+                QRCode.toCanvas(canvas, url, { width: 200, margin: 1 }, function(error) {
+                    if (error) console.error(error);
+                });
+            });
+            
+            qrCodesDiv.style.display = 'block';
+        }
+        
+        // Update leaderboard
+        function updateLeaderboard() {
+            const rocks = getRocks();
+            const discoveries = getDiscoveries();
+            
+            // Update stats
+            document.getElementById('total-rocks').textContent = rocks.length;
+            document.getElementById('total-finds').textContent = discoveries.length;
+            
+            // Calculate scout rankings
+            const scoutStats = {};
+            discoveries.forEach(disc => {
+                if (!scoutStats[disc.scout]) {
+                    scoutStats[disc.scout] = new Set();
+                }
+                scoutStats[disc.scout].add(disc.rock);
+            });
+            
+            const rankings = Object.entries(scoutStats)
+                .map(([scout, rocks]) => ({
+                    scout: scout,
+                    count: rocks.size
+                }))
+                .sort((a, b) => b.count - a.count);
+            
+            // Display leaderboard
+            const leaderboardList = document.getElementById('leaderboard-list');
+            
+            if (rankings.length === 0) {
+                leaderboardList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <p>No discoveries yet! Get out there and find some rocks!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            leaderboardList.innerHTML = rankings.map((entry, index) => `
+                <div class="leaderboard-item">
+                    <div class="rank">${index + 1}</div>
+                    <div class="scout-info">
+                        <div class="scout-name">${entry.scout}</div>
+                        <div class="rocks-found">${entry.count} rock${entry.count !== 1 ? 's' : ''} found</div>
+                    </div>
+                    <div class="badge">${entry.count}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Update admin view
+        function updateAdminView() {
+            const rocks = getRocks();
+            const discoveries = getDiscoveries();
+            const adminList = document.getElementById('admin-list');
+            
+            // Load current rocks into textarea
+            document.getElementById('rock-names').value = rocks.map(r => r.name).join('\n');
+            
+            // Show existing codes if rocks are set up
+            if (rocks.length > 0) {
+                const codesDisplay = document.getElementById('codes-display');
+                const codesList = document.getElementById('codes-list');
+                
+                codesList.innerHTML = rocks.map(rock => `
+                    <div style="display: flex; justify-content: space-between; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ffc107;">
+                        <strong>${rock.name}:</strong>
+                        <span style="color: #667eea; font-weight: 700; font-size: 18px;">${rock.code}</span>
+                    </div>
+                `).join('');
+                
+                codesDisplay.style.display = 'block';
+            }
+            
+            if (discoveries.length === 0) {
+                adminList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <p>No discoveries recorded yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group discoveries by rock
+            const byRock = {};
+            discoveries.forEach(disc => {
+                if (!byRock[disc.rock]) {
+                    byRock[disc.rock] = [];
+                }
+                byRock[disc.rock].push(disc.scout);
+            });
+            
+            adminList.innerHTML = Object.entries(byRock).map(([rock, scouts]) => `
+                <div class="rock-item">
+                    <div>
+                        <div class="rock-name">${rock}</div>
+                        <div class="scout-list">Found by: ${scouts.join(', ')}</div>
+                    </div>
+                    <div class="badge">${scouts.length}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Reset all data
+        function resetData() {
+            if (!confirm('Are you sure you want to reset ALL data? This cannot be undone!')) {
+                return;
+            }
+            
+            localStorage.removeItem(ROCKS_KEY);
+            localStorage.removeItem(DISCOVERIES_KEY);
+            
+            updateLeaderboard();
+            updateAdminView();
+            document.getElementById('codes-display').style.display = 'none';
+            
+            alert('All data has been reset!');
+        }
+        
+        // Helper functions
+        function showMessage(element, message, type) {
+            element.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+        
+        function getRocks() {
+            const stored = localStorage.getItem(ROCKS_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+        
+        function saveRocks(rocks) {
+            localStorage.setItem(ROCKS_KEY, JSON.stringify(rocks));
+        }
+        
+        function getDiscoveries() {
+            const stored = localStorage.getItem(DISCOVERIES_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+        
+        function saveDiscoveries(discoveries) {
+            localStorage.setItem(DISCOVERIES_KEY, JSON.stringify(discoveries));
+        }
+    </script>
+</body>
+</html>
