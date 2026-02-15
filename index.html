@@ -513,14 +513,21 @@
         });
         
         // Leaderboard visibility control
-        function isLeaderboardEnabled() {
-            return localStorage.getItem(LEADERBOARD_ENABLED_KEY) === 'true';
+        async function isLeaderboardEnabled() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getLeaderboardEnabled`);
+                const data = await response.json();
+                return data.enabled || false;
+            } catch (error) {
+                console.error('Error fetching leaderboard setting:', error);
+                return false;
+            }
         }
         
-        function updateLeaderboardVisibility() {
+        async function updateLeaderboardVisibility() {
             const leaderboardTab = document.querySelectorAll('.nav-tab')[1]; // Leaderboard is second tab
             const isAdmin = sessionStorage.getItem('admin_logged_in') === 'true';
-            const isEnabled = isLeaderboardEnabled();
+            const isEnabled = await isLeaderboardEnabled();
             
             if (isAdmin || isEnabled) {
                 leaderboardTab.style.display = 'block';
@@ -532,30 +539,43 @@
             const toggle = document.getElementById('leaderboard-toggle');
             if (toggle) {
                 toggle.checked = isEnabled;
-                updateLeaderboardStatus();
+                updateLeaderboardStatus(isEnabled);
             }
         }
         
-        function toggleLeaderboard() {
+        async function toggleLeaderboard() {
             const toggle = document.getElementById('leaderboard-toggle');
             const enabled = toggle.checked;
             
-            localStorage.setItem(LEADERBOARD_ENABLED_KEY, enabled.toString());
-            updateLeaderboardVisibility();
-            updateLeaderboardStatus();
-            
-            if (enabled) {
-                alert('✅ Leaderboard is now visible to everyone!');
-            } else {
-                alert('🔒 Leaderboard is now hidden from scouts.');
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'setLeaderboardEnabled',
+                        enabled: enabled
+                    })
+                });
+                
+                await updateLeaderboardVisibility();
+                
+                if (enabled) {
+                    alert('✅ Leaderboard is now visible to everyone!');
+                } else {
+                    alert('🔒 Leaderboard is now hidden from scouts.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error updating leaderboard setting. Please try again.');
             }
         }
         
-        function updateLeaderboardStatus() {
+        function updateLeaderboardStatus(enabled) {
             const status = document.getElementById('leaderboard-status');
             if (!status) return;
             
-            const enabled = isLeaderboardEnabled();
             if (enabled) {
                 status.textContent = 'Public';
                 status.style.background = '#28a745';
@@ -568,7 +588,7 @@
         }
         
         // Tab switching
-        function showTab(tabName) {
+        async function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.style.display = 'none';
             });
@@ -588,7 +608,8 @@
                     document.getElementById('admin-login').style.display = 'none';
                     document.getElementById('admin-content').style.display = 'block';
                     updateAdminView();
-                    updateLeaderboardStatus();
+                    const enabled = await isLeaderboardEnabled();
+                    updateLeaderboardStatus(enabled);
                 } else {
                     document.getElementById('admin-login').style.display = 'block';
                     document.getElementById('admin-content').style.display = 'none';
