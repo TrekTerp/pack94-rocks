@@ -385,7 +385,7 @@
                     
                     <button class="btn" onclick="checkAdminPassword()">Unlock Admin</button>
                     
-                    <div style="margin-top: 24px; padding: 16px; background: #e7f3ff; border-radius: 8px; border: 1px solid #2196F3;">
+                    <div id="default-password-notice" style="margin-top: 24px; padding: 16px; background: #e7f3ff; border-radius: 8px; border: 1px solid #2196F3;">
                         <p style="color: #1976D2; font-size: 13px; margin: 0;">
                             <strong>First time setup:</strong> The default password is <code style="background: white; padding: 2px 6px; border-radius: 4px;">scout123</code>. You can change it after logging in.
                         </p>
@@ -592,6 +592,11 @@
                 } else {
                     document.getElementById('admin-login').style.display = 'block';
                     document.getElementById('admin-content').style.display = 'none';
+                    // Hide default password notice if password has been changed
+                    const notice = document.getElementById('default-password-notice');
+                    if (notice && getAdminPassword() !== DEFAULT_PASSWORD) {
+                        notice.style.display = 'none';
+                    }
                 }
             }
         }
