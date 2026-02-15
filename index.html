@@ -324,7 +324,7 @@
             
             <div class="nav-tabs">
                 <button class="nav-tab active" onclick="showTab('find')">Find Rock</button>
-                <button class="nav-tab" onclick="showTab('leaderboard')">Leaderboard</button>
+                <button class="nav-tab" onclick="showTab('leaderboard')" id="leaderboard-nav-tab" style="display: none;">Leaderboard</button>
                 <button class="nav-tab" onclick="showTab('admin')">Admin</button>
             </div>
             
@@ -525,7 +525,7 @@
         }
         
         async function updateLeaderboardVisibility() {
-            const leaderboardTab = document.querySelectorAll('.nav-tab')[1]; // Leaderboard is second tab
+            const leaderboardTab = document.getElementById('leaderboard-nav-tab');
             const isAdmin = sessionStorage.getItem('admin_logged_in') === 'true';
             const isEnabled = await isLeaderboardEnabled();
             
