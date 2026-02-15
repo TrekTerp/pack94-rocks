@@ -541,6 +541,8 @@
                 toggle.checked = isEnabled;
                 updateLeaderboardStatus(isEnabled);
             }
+            
+            return isEnabled;
         }
         
         async function toggleLeaderboard() {
@@ -608,7 +610,12 @@
                     document.getElementById('admin-login').style.display = 'none';
                     document.getElementById('admin-content').style.display = 'block';
                     updateAdminView();
+                    // Update leaderboard toggle and status
                     const enabled = await isLeaderboardEnabled();
+                    const toggle = document.getElementById('leaderboard-toggle');
+                    if (toggle) {
+                        toggle.checked = enabled;
+                    }
                     updateLeaderboardStatus(enabled);
                 } else {
                     document.getElementById('admin-login').style.display = 'block';
