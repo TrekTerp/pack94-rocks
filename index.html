@@ -81,7 +81,7 @@
             font-size: 14px;
         }
         
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -90,7 +90,7 @@
             transition: border-color 0.2s;
         }
         
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -115,6 +115,12 @@
         
         .btn:active {
             transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .btn-secondary {
@@ -144,6 +150,15 @@
             border-radius: 8px;
             margin-bottom: 16px;
             border: 1px solid #f5c6cb;
+        }
+        
+        .info-message {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #bee5eb;
         }
         
         .rock-item {
@@ -270,18 +285,18 @@
             margin-bottom: 16px;
         }
         
-        .code-box {
-            background: #f8f9fa;
-            border: 2px solid #667eea;
-            padding: 16px;
-            border-radius: 8px;
-            margin: 8px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            color: #667eea;
-            letter-spacing: 2px;
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
         @media print {
@@ -327,7 +342,7 @@
                     <input type="text" id="secret-code" placeholder="Enter the code from the rock" style="text-transform: uppercase;">
                 </div>
                 
-                <button class="btn" onclick="registerFind()">Register Find! 🎉</button>
+                <button class="btn" id="register-btn" onclick="registerFind()">Register Find! 🎉</button>
                 
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
                     <p style="color: #666; font-size: 14px;">
@@ -340,17 +355,21 @@
             <div id="leaderboard-tab" class="tab-content" style="display: none;">
                 <div class="stats">
                     <div class="stat-box">
-                        <div class="stat-number" id="total-rocks">0</div>
+                        <div class="stat-number" id="total-rocks">-</div>
                         <div class="stat-label">Total Rocks</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-number" id="total-finds">0</div>
+                        <div class="stat-number" id="total-finds">-</div>
                         <div class="stat-label">Total Finds</div>
                     </div>
                 </div>
                 
                 <h3 style="margin-bottom: 16px; color: #333;">Top Scouts</h3>
-                <div id="leaderboard-list"></div>
+                <div id="leaderboard-list">
+                    <div class="info-message">Loading leaderboard...</div>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="updateLeaderboard()">🔄 Refresh</button>
             </div>
             
             <!-- Admin Tab -->
@@ -374,77 +393,102 @@
                 </div>
                 
                 <div id="admin-content" style="display: none;">
-                <h3 style="margin-bottom: 16px; color: #333;">Setup Rocks</h3>
-                
-                <div class="input-group">
-                    <label for="rock-names">Rock Names (one per line)</label>
-                    <textarea id="rock-names" rows="6" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; font-family: inherit;" placeholder="Red Dragon&#10;Blue Butterfly&#10;Golden Eagle&#10;Silver Wolf"></textarea>
-                </div>
-                
-                <button class="btn" onclick="setupRocks()">Save Rocks & Generate Codes</button>
-                
-                <div id="codes-display" style="display: none; margin-top: 24px; padding: 20px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107;">
-                    <h3 style="margin-bottom: 16px; color: #856404;">🔑 Secret Codes - Write These on Your Rocks!</h3>
-                    <p style="color: #856404; margin-bottom: 16px; font-size: 14px;">
-                        <strong>IMPORTANT:</strong> Copy these codes and write/attach them to each rock or rock card. Scouts will need to enter the correct code to register their find.
-                    </p>
-                    <div id="codes-list" style="font-family: monospace; font-size: 16px;"></div>
-                </div>
-                
-                <button class="btn btn-secondary" onclick="generateQRCodes()" style="margin-top: 16px;">Generate QR Codes for Printing</button>
-                
-                <div id="qr-codes" style="display: none;">
-                    <h3 style="margin: 24px 0 16px; color: #333;">QR Codes (Print These!)</h3>
-                    <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
-                        Print these QR codes and attach them to your rock cards. When scouts scan them, the secret code will be automatically filled in - they just need to enter their name! The code is also printed on each card in case someone needs to type it manually.
-                    </p>
-                    <div id="qr-grid" class="qr-grid"></div>
-                </div>
-                
-                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
-                    <h3 style="margin-bottom: 16px; color: #333;">All Discoveries</h3>
-                    <div id="admin-list"></div>
-                </div>
-                
-                <button class="btn btn-secondary" onclick="resetData()" style="margin-top: 16px; background: #dc3545;">
-                    Reset All Data
-                </button>
-                
-                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
-                    <h3 style="margin-bottom: 16px; color: #333;">Change Admin Password</h3>
-                    
-                    <div class="input-group">
-                        <label for="new-password">New Password</label>
-                        <input type="password" id="new-password" placeholder="Enter new password">
+                    <div id="setup-instructions" style="background: #fff3cd; padding: 16px; border-radius: 8px; border: 1px solid #ffc107; margin-bottom: 24px;">
+                        <h3 style="color: #856404; margin-bottom: 12px;">📋 Initial Setup Required</h3>
+                        <p style="color: #856404; font-size: 14px; margin-bottom: 12px;">Before using the tracker, you need to set up a Google Sheet:</p>
+                        <ol style="color: #856404; font-size: 14px; margin-left: 20px;">
+                            <li style="margin-bottom: 8px;">Click the button below to create a Google Sheet</li>
+                            <li style="margin-bottom: 8px;">Follow the setup instructions that appear</li>
+                            <li style="margin-bottom: 8px;">Copy the Script URL and paste it below</li>
+                            <li>Enter your rock names and save</li>
+                        </ol>
                     </div>
                     
                     <div class="input-group">
-                        <label for="confirm-password">Confirm Password</label>
-                        <input type="password" id="confirm-password" placeholder="Confirm new password">
+                        <label for="script-url">Google Apps Script URL</label>
+                        <input type="text" id="script-url" placeholder="Paste your script URL here">
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                            This connects your tracker to Google Sheets. Only enter this once during setup.
+                        </small>
                     </div>
                     
-                    <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
-                </div>
-                
-                <button class="btn btn-secondary" onclick="logoutAdmin()" style="margin-top: 24px; background: #6c757d;">
-                    Logout
-                </button>
+                    <button class="btn btn-secondary" onclick="saveScriptUrl()">Save Script URL</button>
+                    
+                    <button class="btn btn-secondary" onclick="openSheetSetup()" style="margin-top: 8px;">
+                        📊 Open Google Sheet Setup Instructions
+                    </button>
+                    
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+                        <h3 style="margin-bottom: 16px; color: #333;">Setup Rocks</h3>
+                        
+                        <div class="input-group">
+                            <label for="rock-names">Rock Names (one per line)</label>
+                            <textarea id="rock-names" rows="6" placeholder="Red Dragon&#10;Blue Butterfly&#10;Golden Eagle&#10;Silver Wolf"></textarea>
+                        </div>
+                        
+                        <button class="btn" onclick="setupRocks()">Save Rocks & Generate Codes</button>
+                        
+                        <div id="codes-display" style="display: none; margin-top: 24px; padding: 20px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107;">
+                            <h3 style="margin-bottom: 16px; color: #856404;">🔑 Secret Codes - Write These on Your Rocks!</h3>
+                            <p style="color: #856404; margin-bottom: 16px; font-size: 14px;">
+                                <strong>IMPORTANT:</strong> Copy these codes and write/attach them to each rock or rock card. Scouts will need to enter the correct code to register their find.
+                            </p>
+                            <div id="codes-list" style="font-family: monospace; font-size: 16px;"></div>
+                        </div>
+                        
+                        <button class="btn btn-secondary" onclick="generateQRCodes()" style="margin-top: 16px;">Generate QR Codes for Printing</button>
+                        
+                        <div id="qr-codes" style="display: none;">
+                            <h3 style="margin: 24px 0 16px; color: #333;">QR Codes (Print These!)</h3>
+                            <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+                                Print these QR codes and attach them to your rock cards. When scouts scan them, the secret code will be automatically filled in - they just need to enter their name!
+                            </p>
+                            <div id="qr-grid" class="qr-grid"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+                        <h3 style="margin-bottom: 16px; color: #333;">All Discoveries</h3>
+                        <div id="admin-list">
+                            <div class="info-message">Loading discoveries...</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="updateAdminView()">🔄 Refresh</button>
+                    </div>
+                    
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+                        <h3 style="margin-bottom: 16px; color: #333;">Change Admin Password</h3>
+                        
+                        <div class="input-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" placeholder="Enter new password">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" placeholder="Confirm new password">
+                        </div>
+                        
+                        <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="logoutAdmin()" style="margin-top: 24px; background: #6c757d;">
+                        Logout
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Storage keys
-        const ROCKS_KEY = 'scouts_rocks';
-        const DISCOVERIES_KEY = 'scouts_discoveries';
+        // Configuration
         const ADMIN_PASSWORD_KEY = 'scouts_admin_password';
+        const SCRIPT_URL_KEY = 'scouts_script_url';
         const DEFAULT_PASSWORD = 'scout123';
+        let SCRIPT_URL = localStorage.getItem(SCRIPT_URL_KEY) || '';
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateLeaderboard();
-            updateAdminView();
             
             // Auto-uppercase secret code input
             document.getElementById('secret-code').addEventListener('input', function(e) {
@@ -465,39 +509,33 @@
                 document.getElementById('secret-code').value = codeParam.toUpperCase();
                 document.getElementById('scout-name').focus();
                 
-                // Find and display rock name
-                const rocks = getRocks();
-                const rockEntry = rocks.find(r => r.code === codeParam.toUpperCase());
-                if (rockEntry) {
-                    const messageDiv = document.getElementById('find-message');
-                    showMessage(messageDiv, `🪨 You found: ${rockEntry.name}! Enter your name to register.`, 'success');
-                }
+                // Look up rock name
+                fetchRocks().then(rocks => {
+                    const rockEntry = rocks.find(r => r.code === codeParam.toUpperCase());
+                    if (rockEntry) {
+                        const messageDiv = document.getElementById('find-message');
+                        showMessage(messageDiv, `🪨 You found: ${rockEntry.name}! Enter your name to register.`, 'success');
+                    }
+                });
             }
         });
         
         // Tab switching
         function showTab(tabName) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.style.display = 'none';
             });
             
-            // Remove active class from all tabs
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Show selected tab
             document.getElementById(tabName + '-tab').style.display = 'block';
-            
-            // Add active class to clicked tab
             event.target.classList.add('active');
             
-            // Update data when switching to leaderboard or admin
             if (tabName === 'leaderboard') {
                 updateLeaderboard();
             } else if (tabName === 'admin') {
-                // Check if admin is logged in
                 const isLoggedIn = sessionStorage.getItem('admin_logged_in') === 'true';
                 if (isLoggedIn) {
                     document.getElementById('admin-login').style.display = 'none';
@@ -510,9 +548,89 @@
             }
         }
         
+        // Google Sheets API functions
+        async function callSheetAPI(action, data = {}) {
+            if (!SCRIPT_URL) {
+                throw new Error('Script URL not configured. Please set it up in the Admin panel.');
+            }
+            
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action, ...data })
+            });
+            
+            // Note: no-cors means we can't read the response, so we'll use GET for reads
+            if (action === 'getRocks' || action === 'getDiscoveries') {
+                const getResponse = await fetch(`${SCRIPT_URL}?action=${action}`);
+                return await getResponse.json();
+            }
+            
+            return { success: true };
+        }
+        
+        async function fetchRocks() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getRocks`);
+                const data = await response.json();
+                return data.rocks || [];
+            } catch (error) {
+                console.error('Error fetching rocks:', error);
+                return [];
+            }
+        }
+        
+        async function fetchDiscoveries() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getDiscoveries`);
+                const data = await response.json();
+                return data.discoveries || [];
+            } catch (error) {
+                console.error('Error fetching discoveries:', error);
+                return [];
+            }
+        }
+        
+        async function saveRocksToSheet(rocks) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveRocks',
+                        rocks: rocks
+                    })
+                });
+            } catch (error) {
+                console.error('Error saving rocks:', error);
+            }
+        }
+        
+        async function saveDiscoveryToSheet(discovery) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveDiscovery',
+                        discovery: discovery
+                    })
+                });
+            } catch (error) {
+                console.error('Error saving discovery:', error);
+            }
+        }
+        
         // Generate a random code
         function generateCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar chars
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             let code = '';
             for (let i = 0; i < 6; i++) {
                 code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -572,17 +690,81 @@
             document.getElementById('admin-login').style.display = 'block';
             document.getElementById('admin-content').style.display = 'none';
             
-            // Switch to Find Rock tab
             showTab('find');
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-tab')[0].classList.add('active');
         }
         
+        function saveScriptUrl() {
+            const url = document.getElementById('script-url').value.trim();
+            if (!url) {
+                alert('Please enter a Script URL!');
+                return;
+            }
+            
+            if (!url.includes('script.google.com')) {
+                alert('This doesn\'t look like a Google Apps Script URL. Make sure you copied the deployment URL.');
+                return;
+            }
+            
+            localStorage.setItem(SCRIPT_URL_KEY, url);
+            SCRIPT_URL = url;
+            alert('✅ Script URL saved! You can now set up your rocks.');
+            
+            // Hide setup instructions
+            const instructions = document.getElementById('setup-instructions');
+            if (instructions) {
+                instructions.style.display = 'none';
+            }
+        }
+        
+        function openSheetSetup() {
+            const instructions = `
+GOOGLE SHEETS SETUP INSTRUCTIONS
+================================
+
+1. CREATE A NEW GOOGLE SHEET:
+   - Go to sheets.google.com
+   - Create a new blank spreadsheet
+   - Name it "Pack 94 Scout Rock Tracker"
+
+2. OPEN APPS SCRIPT:
+   - In your spreadsheet, click Extensions → Apps Script
+   - Delete any code in the editor
+   - Paste in the code from the setup guide (provided separately)
+
+3. DEPLOY THE SCRIPT:
+   - Click Deploy → New deployment
+   - Click the gear icon ⚙️ → Select "Web app"
+   - Description: "Scout Rock Tracker API"
+   - Execute as: "Me"
+   - Who has access: "Anyone"
+   - Click Deploy
+   - Click "Authorize access" and grant permissions
+   - Copy the Web app URL (it will end with /exec)
+
+4. PASTE THE URL:
+   - Come back to this admin panel
+   - Paste the URL in the "Google Apps Script URL" field
+   - Click Save
+
+Need the script code? It will be provided in a separate text file.
+            `;
+            
+            alert(instructions);
+        }
+        
         // Register a find
-        function registerFind() {
+        async function registerFind() {
             const scoutName = document.getElementById('scout-name').value.trim();
             const secretCode = document.getElementById('secret-code').value.trim().toUpperCase();
             const messageDiv = document.getElementById('find-message');
+            const registerBtn = document.getElementById('register-btn');
+            
+            if (!SCRIPT_URL) {
+                showMessage(messageDiv, '❌ System not configured. Please contact your pack leader.', 'error');
+                return;
+            }
             
             if (!scoutName) {
                 showMessage(messageDiv, 'Please enter your name!', 'error');
@@ -594,49 +776,64 @@
                 return;
             }
             
-            // Validate code and find rock
-            const rocks = getRocks();
-            const rockEntry = rocks.find(r => r.code === secretCode);
+            // Disable button and show loading
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<span class="loading-spinner"></span> Registering...';
             
-            if (!rockEntry) {
-                showMessage(messageDiv, '❌ Invalid code! Check the code on the rock and try again.', 'error');
-                return;
+            try {
+                // Validate code and find rock
+                const rocks = await fetchRocks();
+                const rockEntry = rocks.find(r => r.code === secretCode);
+                
+                if (!rockEntry) {
+                    showMessage(messageDiv, '❌ Invalid code! Check the code on the rock and try again.', 'error');
+                    return;
+                }
+                
+                // Check if scout already found this rock
+                const discoveries = await fetchDiscoveries();
+                const alreadyFound = discoveries.find(d => 
+                    d.scout.toLowerCase() === scoutName.toLowerCase() && 
+                    d.rock === rockEntry.name
+                );
+                
+                if (alreadyFound) {
+                    showMessage(messageDiv, `You already found ${rockEntry.name}! Try finding a different rock.`, 'error');
+                    return;
+                }
+                
+                // Save discovery
+                const discovery = {
+                    scout: scoutName,
+                    rock: rockEntry.name,
+                    timestamp: new Date().toISOString()
+                };
+                
+                await saveDiscoveryToSheet(discovery);
+                
+                // Show success message
+                showMessage(messageDiv, `🎉 Awesome! ${scoutName} found ${rockEntry.name}!`, 'success');
+                
+                // Clear form
+                document.getElementById('scout-name').value = '';
+                document.getElementById('secret-code').value = '';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(messageDiv, '❌ Error registering find. Please try again.', 'error');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = 'Register Find! 🎉';
             }
-            
-            // Check if scout already found this rock
-            const discoveries = getDiscoveries();
-            const alreadyFound = discoveries.find(d => 
-                d.scout.toLowerCase() === scoutName.toLowerCase() && 
-                d.rock === rockEntry.name
-            );
-            
-            if (alreadyFound) {
-                showMessage(messageDiv, `You already found ${rockEntry.name}! Try finding a different rock.`, 'error');
-                return;
-            }
-            
-            // Save discovery
-            const discovery = {
-                scout: scoutName,
-                rock: rockEntry.name,
-                timestamp: new Date().toISOString()
-            };
-            discoveries.push(discovery);
-            saveDiscoveries(discoveries);
-            
-            // Show success message
-            showMessage(messageDiv, `🎉 Awesome! ${scoutName} found ${rockEntry.name}!`, 'success');
-            
-            // Clear form
-            document.getElementById('scout-name').value = '';
-            document.getElementById('secret-code').value = '';
-            
-            // Update leaderboard in case they switch tabs
-            updateLeaderboard();
         }
         
         // Setup rocks
-        function setupRocks() {
+        async function setupRocks() {
+            if (!SCRIPT_URL) {
+                alert('Please set up the Google Apps Script URL first!');
+                return;
+            }
+            
             const rockNames = document.getElementById('rock-names').value
                 .split('\n')
                 .map(name => name.trim())
@@ -653,28 +850,32 @@
                 code: generateCode()
             }));
             
-            saveRocks(rocks);
-            
-            // Display codes
-            const codesDisplay = document.getElementById('codes-display');
-            const codesList = document.getElementById('codes-list');
-            
-            codesList.innerHTML = rocks.map(rock => `
-                <div style="display: flex; justify-content: space-between; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ffc107;">
-                    <strong>${rock.name}:</strong>
-                    <span style="color: #667eea; font-weight: 700; font-size: 18px;">${rock.code}</span>
-                </div>
-            `).join('');
-            
-            codesDisplay.style.display = 'block';
-            
-            alert(`Successfully saved ${rocks.length} rocks with secret codes!`);
-            updateAdminView();
+            try {
+                await saveRocksToSheet(rocks);
+                
+                // Display codes
+                const codesDisplay = document.getElementById('codes-display');
+                const codesList = document.getElementById('codes-list');
+                
+                codesList.innerHTML = rocks.map(rock => `
+                    <div style="display: flex; justify-content: space-between; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ffc107;">
+                        <strong>${rock.name}:</strong>
+                        <span style="color: #667eea; font-weight: 700; font-size: 18px;">${rock.code}</span>
+                    </div>
+                `).join('');
+                
+                codesDisplay.style.display = 'block';
+                
+                alert(`✅ Successfully saved ${rocks.length} rocks with secret codes!`);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error saving rocks. Please try again.');
+            }
         }
         
         // Generate QR codes
-        function generateQRCodes() {
-            const rocks = getRocks();
+        async function generateQRCodes() {
+            const rocks = await fetchRocks();
             
             if (rocks.length === 0) {
                 alert('Please set up rocks first!');
@@ -700,7 +901,6 @@
                 qrItem.appendChild(label);
                 qrGrid.appendChild(qrItem);
                 
-                // QR code includes the secret code in URL
                 const url = `${baseUrl}?code=${rock.code}`;
                 QRCode.toCanvas(canvas, url, { width: 200, margin: 1 }, function(error) {
                     if (error) console.error(error);
@@ -711,123 +911,138 @@
         }
         
         // Update leaderboard
-        function updateLeaderboard() {
-            const rocks = getRocks();
-            const discoveries = getDiscoveries();
-            
-            // Update stats
-            document.getElementById('total-rocks').textContent = rocks.length;
-            document.getElementById('total-finds').textContent = discoveries.length;
-            
-            // Calculate scout rankings
-            const scoutStats = {};
-            discoveries.forEach(disc => {
-                if (!scoutStats[disc.scout]) {
-                    scoutStats[disc.scout] = new Set();
-                }
-                scoutStats[disc.scout].add(disc.rock);
-            });
-            
-            const rankings = Object.entries(scoutStats)
-                .map(([scout, rocks]) => ({
-                    scout: scout,
-                    count: rocks.size
-                }))
-                .sort((a, b) => b.count - a.count);
-            
-            // Display leaderboard
+        async function updateLeaderboard() {
             const leaderboardList = document.getElementById('leaderboard-list');
             
-            if (rankings.length === 0) {
-                leaderboardList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔍</div>
-                        <p>No discoveries yet! Get out there and find some rocks!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            leaderboardList.innerHTML = rankings.map((entry, index) => `
-                <div class="leaderboard-item">
-                    <div class="rank">${index + 1}</div>
-                    <div class="scout-info">
-                        <div class="scout-name">${entry.scout}</div>
-                        <div class="rocks-found">${entry.count} rock${entry.count !== 1 ? 's' : ''} found</div>
-                    </div>
-                    <div class="badge">${entry.count}</div>
-                </div>
-            `).join('');
-        }
-        
-        // Update admin view
-        function updateAdminView() {
-            const rocks = getRocks();
-            const discoveries = getDiscoveries();
-            const adminList = document.getElementById('admin-list');
-            
-            // Load current rocks into textarea
-            document.getElementById('rock-names').value = rocks.map(r => r.name).join('\n');
-            
-            // Show existing codes if rocks are set up
-            if (rocks.length > 0) {
-                const codesDisplay = document.getElementById('codes-display');
-                const codesList = document.getElementById('codes-list');
+            try {
+                const rocks = await fetchRocks();
+                const discoveries = await fetchDiscoveries();
                 
-                codesList.innerHTML = rocks.map(rock => `
-                    <div style="display: flex; justify-content: space-between; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ffc107;">
-                        <strong>${rock.name}:</strong>
-                        <span style="color: #667eea; font-weight: 700; font-size: 18px;">${rock.code}</span>
+                // Update stats
+                document.getElementById('total-rocks').textContent = rocks.length;
+                document.getElementById('total-finds').textContent = discoveries.length;
+                
+                // Calculate scout rankings
+                const scoutStats = {};
+                discoveries.forEach(disc => {
+                    if (!scoutStats[disc.scout]) {
+                        scoutStats[disc.scout] = new Set();
+                    }
+                    scoutStats[disc.scout].add(disc.rock);
+                });
+                
+                const rankings = Object.entries(scoutStats)
+                    .map(([scout, rocks]) => ({
+                        scout: scout,
+                        count: rocks.size
+                    }))
+                    .sort((a, b) => b.count - a.count);
+                
+                // Display leaderboard
+                if (rankings.length === 0) {
+                    leaderboardList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <p>No discoveries yet! Get out there and find some rocks!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                leaderboardList.innerHTML = rankings.map((entry, index) => `
+                    <div class="leaderboard-item">
+                        <div class="rank">${index + 1}</div>
+                        <div class="scout-info">
+                            <div class="scout-name">${entry.scout}</div>
+                            <div class="rocks-found">${entry.count} rock${entry.count !== 1 ? 's' : ''} found</div>
+                        </div>
+                        <div class="badge">${entry.count}</div>
                     </div>
                 `).join('');
                 
-                codesDisplay.style.display = 'block';
-            }
-            
-            if (discoveries.length === 0) {
-                adminList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📝</div>
-                        <p>No discoveries recorded yet.</p>
+            } catch (error) {
+                console.error('Error:', error);
+                leaderboardList.innerHTML = `
+                    <div class="error-message">
+                        ❌ Error loading leaderboard. Please refresh or check your connection.
                     </div>
                 `;
-                return;
             }
-            
-            // Group discoveries by rock
-            const byRock = {};
-            discoveries.forEach(disc => {
-                if (!byRock[disc.rock]) {
-                    byRock[disc.rock] = [];
-                }
-                byRock[disc.rock].push(disc.scout);
-            });
-            
-            adminList.innerHTML = Object.entries(byRock).map(([rock, scouts]) => `
-                <div class="rock-item">
-                    <div>
-                        <div class="rock-name">${rock}</div>
-                        <div class="scout-list">Found by: ${scouts.join(', ')}</div>
-                    </div>
-                    <div class="badge">${scouts.length}</div>
-                </div>
-            `).join('');
         }
         
-        // Reset all data
-        function resetData() {
-            if (!confirm('Are you sure you want to reset ALL data? This cannot be undone!')) {
-                return;
+        // Update admin view
+        async function updateAdminView() {
+            const adminList = document.getElementById('admin-list');
+            
+            // Load script URL if saved
+            const savedUrl = localStorage.getItem(SCRIPT_URL_KEY);
+            if (savedUrl) {
+                document.getElementById('script-url').value = savedUrl;
+                const instructions = document.getElementById('setup-instructions');
+                if (instructions) {
+                    instructions.style.display = 'none';
+                }
             }
             
-            localStorage.removeItem(ROCKS_KEY);
-            localStorage.removeItem(DISCOVERIES_KEY);
-            
-            updateLeaderboard();
-            updateAdminView();
-            document.getElementById('codes-display').style.display = 'none';
-            
-            alert('All data has been reset!');
+            try {
+                const rocks = await fetchRocks();
+                const discoveries = await fetchDiscoveries();
+                
+                // Load current rocks into textarea
+                document.getElementById('rock-names').value = rocks.map(r => r.name).join('\n');
+                
+                // Show existing codes if rocks are set up
+                if (rocks.length > 0) {
+                    const codesDisplay = document.getElementById('codes-display');
+                    const codesList = document.getElementById('codes-list');
+                    
+                    codesList.innerHTML = rocks.map(rock => `
+                        <div style="display: flex; justify-content: space-between; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ffc107;">
+                            <strong>${rock.name}:</strong>
+                            <span style="color: #667eea; font-weight: 700; font-size: 18px;">${rock.code}</span>
+                        </div>
+                    `).join('');
+                    
+                    codesDisplay.style.display = 'block';
+                }
+                
+                if (discoveries.length === 0) {
+                    adminList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <p>No discoveries recorded yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Group discoveries by rock
+                const byRock = {};
+                discoveries.forEach(disc => {
+                    if (!byRock[disc.rock]) {
+                        byRock[disc.rock] = [];
+                    }
+                    byRock[disc.rock].push(disc.scout);
+                });
+                
+                adminList.innerHTML = Object.entries(byRock).map(([rock, scouts]) => `
+                    <div class="rock-item">
+                        <div>
+                            <div class="rock-name">${rock}</div>
+                            <div class="scout-list">Found by: ${scouts.join(', ')}</div>
+                        </div>
+                        <div class="badge">${scouts.length}</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                adminList.innerHTML = `
+                    <div class="info-message">
+                        Set up your Google Apps Script URL above to view discoveries.
+                    </div>
+                `;
+            }
         }
         
         // Helper functions
@@ -836,24 +1051,6 @@
             setTimeout(() => {
                 element.innerHTML = '';
             }, 5000);
-        }
-        
-        function getRocks() {
-            const stored = localStorage.getItem(ROCKS_KEY);
-            return stored ? JSON.parse(stored) : [];
-        }
-        
-        function saveRocks(rocks) {
-            localStorage.setItem(ROCKS_KEY, JSON.stringify(rocks));
-        }
-        
-        function getDiscoveries() {
-            const stored = localStorage.getItem(DISCOVERIES_KEY);
-            return stored ? JSON.parse(stored) : [];
-        }
-        
-        function saveDiscoveries(discoveries) {
-            localStorage.setItem(DISCOVERIES_KEY, JSON.stringify(discoveries));
         }
     </script>
 </body>
