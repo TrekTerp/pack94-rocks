@@ -550,6 +550,7 @@
             const enabled = toggle.checked;
             
             try {
+                // Save to Google Sheets
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     headers: {
@@ -561,6 +562,10 @@
                     })
                 });
                 
+                // Wait a moment for Google Sheets to update
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Update visibility
                 await updateLeaderboardVisibility();
                 
                 if (enabled) {
@@ -571,6 +576,8 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('❌ Error updating leaderboard setting. Please try again.');
+                // Revert toggle on error
+                toggle.checked = !enabled;
             }
         }
         
