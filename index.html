@@ -393,30 +393,20 @@
                 </div>
                 
                 <div id="admin-content" style="display: none;">
-                    <div id="setup-instructions" style="background: #fff3cd; padding: 16px; border-radius: 8px; border: 1px solid #ffc107; margin-bottom: 24px;">
-                        <h3 style="color: #856404; margin-bottom: 12px;">📋 Initial Setup Required</h3>
-                        <p style="color: #856404; font-size: 14px; margin-bottom: 12px;">Before using the tracker, you need to set up a Google Sheet:</p>
-                        <ol style="color: #856404; font-size: 14px; margin-left: 20px;">
-                            <li style="margin-bottom: 8px;">Click the button below to create a Google Sheet</li>
-                            <li style="margin-bottom: 8px;">Follow the setup instructions that appear</li>
-                            <li style="margin-bottom: 8px;">Copy the Script URL and paste it below</li>
-                            <li>Enter your rock names and save</li>
-                        </ol>
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+                        <h3 style="margin-bottom: 16px; color: #333;">Leaderboard Visibility</h3>
+                        <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+                            Control whether scouts can see the leaderboard. Keep it hidden during the event and reveal it at the end!
+                        </p>
+                        
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+                            <label style="flex: 1; margin: 0; cursor: pointer;">
+                                <input type="checkbox" id="leaderboard-toggle" onchange="toggleLeaderboard()" style="width: auto; margin-right: 8px;">
+                                <strong>Show leaderboard to everyone</strong>
+                            </label>
+                            <span id="leaderboard-status" style="padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 600;"></span>
+                        </div>
                     </div>
-                    
-                    <div class="input-group">
-                        <label for="script-url">Google Apps Script URL</label>
-                        <input type="text" id="script-url" placeholder="Paste your script URL here">
-                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
-                            This connects your tracker to Google Sheets. Only enter this once during setup.
-                        </small>
-                    </div>
-                    
-                    <button class="btn btn-secondary" onclick="saveScriptUrl()">Save Script URL</button>
-                    
-                    <button class="btn btn-secondary" onclick="openSheetSetup()" style="margin-top: 8px;">
-                        📊 Open Google Sheet Setup Instructions
-                    </button>
                     
                     <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
                         <h3 style="margin-bottom: 16px; color: #333;">Setup Rocks</h3>
@@ -483,11 +473,13 @@
         // Configuration
         const ADMIN_PASSWORD_KEY = 'scouts_admin_password';
         const SCRIPT_URL_KEY = 'scouts_script_url';
+        const LEADERBOARD_ENABLED_KEY = 'scouts_leaderboard_enabled';
         const DEFAULT_PASSWORD = 'scout123';
-        let SCRIPT_URL = localStorage.getItem(SCRIPT_URL_KEY) || '';
+        let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1bKwNrhVE1IYRVmERRpFAZArlBrwkjX7Qa0vsxjxrmqBH-rY3ASode7cRHQxCMHLM/exec';
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            updateLeaderboardVisibility();
             updateLeaderboard();
             
             // Auto-uppercase secret code input
@@ -520,6 +512,61 @@
             }
         });
         
+        // Leaderboard visibility control
+        function isLeaderboardEnabled() {
+            return localStorage.getItem(LEADERBOARD_ENABLED_KEY) === 'true';
+        }
+        
+        function updateLeaderboardVisibility() {
+            const leaderboardTab = document.querySelectorAll('.nav-tab')[1]; // Leaderboard is second tab
+            const isAdmin = sessionStorage.getItem('admin_logged_in') === 'true';
+            const isEnabled = isLeaderboardEnabled();
+            
+            if (isAdmin || isEnabled) {
+                leaderboardTab.style.display = 'block';
+            } else {
+                leaderboardTab.style.display = 'none';
+            }
+            
+            // Update toggle in admin if logged in
+            const toggle = document.getElementById('leaderboard-toggle');
+            if (toggle) {
+                toggle.checked = isEnabled;
+                updateLeaderboardStatus();
+            }
+        }
+        
+        function toggleLeaderboard() {
+            const toggle = document.getElementById('leaderboard-toggle');
+            const enabled = toggle.checked;
+            
+            localStorage.setItem(LEADERBOARD_ENABLED_KEY, enabled.toString());
+            updateLeaderboardVisibility();
+            updateLeaderboardStatus();
+            
+            if (enabled) {
+                alert('✅ Leaderboard is now visible to everyone!');
+            } else {
+                alert('🔒 Leaderboard is now hidden from scouts.');
+            }
+        }
+        
+        function updateLeaderboardStatus() {
+            const status = document.getElementById('leaderboard-status');
+            if (!status) return;
+            
+            const enabled = isLeaderboardEnabled();
+            if (enabled) {
+                status.textContent = 'Public';
+                status.style.background = '#28a745';
+                status.style.color = 'white';
+            } else {
+                status.textContent = 'Hidden';
+                status.style.background = '#dc3545';
+                status.style.color = 'white';
+            }
+        }
+        
         // Tab switching
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -541,6 +588,7 @@
                     document.getElementById('admin-login').style.display = 'none';
                     document.getElementById('admin-content').style.display = 'block';
                     updateAdminView();
+                    updateLeaderboardStatus();
                 } else {
                     document.getElementById('admin-login').style.display = 'block';
                     document.getElementById('admin-content').style.display = 'none';
@@ -653,6 +701,7 @@
                 document.getElementById('admin-login').style.display = 'none';
                 document.getElementById('admin-content').style.display = 'block';
                 document.getElementById('admin-password').value = '';
+                updateLeaderboardVisibility(); // Show leaderboard tab for admin
                 updateAdminView();
             } else {
                 alert('❌ Incorrect password!');
@@ -689,6 +738,7 @@
             sessionStorage.removeItem('admin_logged_in');
             document.getElementById('admin-login').style.display = 'block';
             document.getElementById('admin-content').style.display = 'none';
+            updateLeaderboardVisibility(); // Hide leaderboard if not enabled
             
             showTab('find');
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
@@ -973,16 +1023,6 @@ Need the script code? It will be provided in a separate text file.
         // Update admin view
         async function updateAdminView() {
             const adminList = document.getElementById('admin-list');
-            
-            // Load script URL if saved
-            const savedUrl = localStorage.getItem(SCRIPT_URL_KEY);
-            if (savedUrl) {
-                document.getElementById('script-url').value = savedUrl;
-                const instructions = document.getElementById('setup-instructions');
-                if (instructions) {
-                    instructions.style.display = 'none';
-                }
-            }
             
             try {
                 const rocks = await fetchRocks();
