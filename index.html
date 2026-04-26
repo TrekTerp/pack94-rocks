@@ -703,41 +703,38 @@
             }
         }
         
-        // Fetch signups from Google Sheets using JSONP
+        // Fetch signups from Google Sheets using POST to avoid CORS
         async function fetchSignups() {
-            return new Promise((resolve, reject) => {
-                const callbackName = 'signupsCallback_' + Date.now();
-                const script = document.createElement('script');
-                
-                window[callbackName] = function(data) {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    resolve(data.signups || []);
-                };
-                
-                script.onerror = function() {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    
-                    // Fallback to regular fetch
-                    fetch(`${SCRIPT_URL}?action=getSignups`)
-                        .then(r => r.json())
-                        .then(data => resolve(data.signups || []))
-                        .catch(error => {
-                            console.error('Error fetching signups:', error);
-                            resolve([]);
-                        });
-                };
-                
-                script.src = `${SCRIPT_URL}?action=getSignups&callback=${callbackName}`;
-                document.body.appendChild(script);
-            });
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'getSignups'
+                    })
+                });
+                const data = await response.json();
+                return data.signups || [];
+            } catch (error) {
+                console.error('Error fetching signups:', error);
+                return [];
+            }
         }
         
         // Load current scout based on time
         async function loadCurrentScout() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getCurrentScout`);
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'getCurrentScout'
+                    })
+                });
                 const data = await response.json();
                 
                 if (data.scout && data.scout.scout) {
@@ -752,7 +749,15 @@
         // Leaderboard visibility control
         async function isLeaderboardEnabled() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getLeaderboardEnabled`);
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'getLeaderboardEnabled'
+                    })
+                });
                 const data = await response.json();
                 return data.enabled || false;
             } catch (error) {
@@ -901,7 +906,15 @@
         
         async function fetchRocks() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getRocks`);
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'getRocks'
+                    })
+                });
                 const data = await response.json();
                 return data.rocks || [];
             } catch (error) {
@@ -912,7 +925,15 @@
         
         async function fetchDiscoveries() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getDiscoveries`);
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'getDiscoveries'
+                    })
+                });
                 const data = await response.json();
                 return data.discoveries || [];
             } catch (error) {
