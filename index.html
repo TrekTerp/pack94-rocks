@@ -600,7 +600,10 @@
             
             try {
                 const signups = await fetchSignups();
+                console.log('Loaded signups:', signups);
+                
                 const allSlots = generateTimeSlots();
+                console.log('Generated slots sample:', allSlots[0]);
                 
                 // Group by date
                 const slotsByDate = {};
@@ -619,6 +622,16 @@
                     
                     slots.forEach(slot => {
                         const signup = signups.find(s => s.date === slot.date && s.timeSlot === slot.timeSlot);
+                        
+                        if (slot.date === '2025-05-02' && slot.timeSlot.startsWith('8:00')) {
+                            console.log('Checking 8AM slot:', {
+                                slotDate: slot.date,
+                                slotTime: slot.timeSlot,
+                                signup: signup,
+                                signups: signups
+                            });
+                        }
+                        
                         const isAvailable = !signup;
                         const bgColor = isAvailable ? '#d4edda' : '#f8d7da';
                         const textColor = isAvailable ? '#155724' : '#721c24';
@@ -678,6 +691,9 @@
                 
                 showMessage(messageDiv, `✅ Time slot reserved! ${scoutName} is scheduled for ${timeSlot}`, 'success');
                 
+                // Wait a moment for Google Sheets to update
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
                 // Reload time slots to show update
                 await loadTimeSlots();
                 
@@ -687,16 +703,35 @@
             }
         }
         
-        // Fetch signups from Google Sheets
+        // Fetch signups from Google Sheets using JSONP
         async function fetchSignups() {
-            try {
-                const response = await fetch(`${SCRIPT_URL}?action=getSignups`);
-                const data = await response.json();
-                return data.signups || [];
-            } catch (error) {
-                console.error('Error fetching signups:', error);
-                return [];
-            }
+            return new Promise((resolve, reject) => {
+                const callbackName = 'signupsCallback_' + Date.now();
+                const script = document.createElement('script');
+                
+                window[callbackName] = function(data) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    resolve(data.signups || []);
+                };
+                
+                script.onerror = function() {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    
+                    // Fallback to regular fetch
+                    fetch(`${SCRIPT_URL}?action=getSignups`)
+                        .then(r => r.json())
+                        .then(data => resolve(data.signups || []))
+                        .catch(error => {
+                            console.error('Error fetching signups:', error);
+                            resolve([]);
+                        });
+                };
+                
+                script.src = `${SCRIPT_URL}?action=getSignups&callback=${callbackName}`;
+                document.body.appendChild(script);
+            });
         }
         
         // Load current scout based on time
