@@ -324,6 +324,7 @@
             
             <div class="nav-tabs">
                 <button class="nav-tab active" onclick="showTab('find')">Find Rock</button>
+                <button class="nav-tab" onclick="showTab('signup')">Sign Up</button>
                 <button class="nav-tab" onclick="showTab('leaderboard')" id="leaderboard-nav-tab" style="display: none;">Leaderboard</button>
                 <button class="nav-tab" onclick="showTab('admin')">Admin</button>
             </div>
@@ -338,6 +339,19 @@
                 </div>
                 
                 <div class="input-group">
+                    <label for="scout-den">Den</label>
+                    <select id="scout-den">
+                        <option value="">Select your den...</option>
+                        <option value="Lion">Lion</option>
+                        <option value="Tiger">Tiger</option>
+                        <option value="Wolf">Wolf</option>
+                        <option value="Bear">Bear</option>
+                        <option value="Webelo">Webelo</option>
+                        <option value="Arrow of Light">Arrow of Light</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
                     <label for="secret-code">Secret Code (on the rock)</label>
                     <input type="text" id="secret-code" placeholder="Enter the code from the rock" style="text-transform: uppercase;">
                 </div>
@@ -348,6 +362,42 @@
                     <p style="color: #666; font-size: 14px;">
                         <strong>🔒 How it works:</strong> Each rock has a unique secret code. Scan the QR code on the rock card to auto-fill the code, or enter it manually. You must have the correct code to register your find!
                     </p>
+                </div>
+            </div>
+            
+            <!-- Sign Up Tab -->
+            <div id="signup-tab" class="tab-content" style="display: none;">
+                <h3 style="margin-bottom: 16px; color: #333;">Reserve Your Time Slot</h3>
+                <p style="color: #666; margin-bottom: 24px; font-size: 14px;">
+                    Sign up for a one-hour time slot for your scavenger hunt! Your name will automatically appear when you scan rocks during your scheduled time.
+                </p>
+                
+                <div id="signup-message"></div>
+                
+                <div class="input-group">
+                    <label for="signup-scout-name">Scout's Name</label>
+                    <input type="text" id="signup-scout-name" placeholder="Enter your name">
+                </div>
+                
+                <div class="input-group">
+                    <label for="signup-den">Den</label>
+                    <select id="signup-den">
+                        <option value="">Select your den...</option>
+                        <option value="Lion">Lion</option>
+                        <option value="Tiger">Tiger</option>
+                        <option value="Wolf">Wolf</option>
+                        <option value="Bear">Bear</option>
+                        <option value="Webelo">Webelo</option>
+                        <option value="Arrow of Light">Arrow of Light</option>
+                    </select>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <h4 style="margin-bottom: 12px; color: #333;">Available Time Slots</h4>
+                    <p style="color: #666; font-size: 13px; margin-bottom: 16px;">
+                        Click on an available (green) time slot to reserve it. Already reserved slots are shown in red.
+                    </p>
+                    <div id="time-slots-container"></div>
                 </div>
             </div>
             
@@ -481,6 +531,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateLeaderboardVisibility();
             updateLeaderboard();
+            loadCurrentScout(); // Auto-fill scout info if they're scheduled now
             
             // Auto-uppercase secret code input
             document.getElementById('secret-code').addEventListener('input', function(e) {
@@ -511,6 +562,157 @@
                 });
             }
         });
+        
+        // Generate time slots for May 1-4, 8AM-8PM
+        function generateTimeSlots() {
+            const slots = [];
+            const dates = [
+                { date: '2025-05-01', display: 'May 1' },
+                { date: '2025-05-02', display: 'May 2' },
+                { date: '2025-05-03', display: 'May 3' },
+                { date: '2025-05-04', display: 'May 4' }
+            ];
+            
+            dates.forEach(dateObj => {
+                for (let hour = 8; hour < 20; hour++) {
+                    const startHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                    const endHour = (hour + 1) > 12 ? (hour + 1) - 12 : ((hour + 1) === 0 ? 12 : (hour + 1));
+                    const startPeriod = hour >= 12 ? 'PM' : 'AM';
+                    const endPeriod = (hour + 1) >= 12 ? 'PM' : 'AM';
+                    
+                    const timeSlot = `${startHour}:00 ${startPeriod}-${endHour}:00 ${endPeriod}`;
+                    slots.push({
+                        date: dateObj.date,
+                        dateDisplay: dateObj.display,
+                        timeSlot: timeSlot,
+                        key: `${dateObj.date}|${timeSlot}`
+                    });
+                }
+            });
+            
+            return slots;
+        }
+        
+        // Load and display time slots
+        async function loadTimeSlots() {
+            const container = document.getElementById('time-slots-container');
+            container.innerHTML = '<div class="info-message">Loading time slots...</div>';
+            
+            try {
+                const signups = await fetchSignups();
+                const allSlots = generateTimeSlots();
+                
+                // Group by date
+                const slotsByDate = {};
+                allSlots.forEach(slot => {
+                    if (!slotsByDate[slot.dateDisplay]) {
+                        slotsByDate[slot.dateDisplay] = [];
+                    }
+                    slotsByDate[slot.dateDisplay].push(slot);
+                });
+                
+                let html = '';
+                Object.entries(slotsByDate).forEach(([date, slots]) => {
+                    html += `<div style="margin-bottom: 24px;">`;
+                    html += `<h5 style="color: #667eea; margin-bottom: 12px;">${date}</h5>`;
+                    html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px;">`;
+                    
+                    slots.forEach(slot => {
+                        const signup = signups.find(s => s.date === slot.date && s.timeSlot === slot.timeSlot);
+                        const isAvailable = !signup;
+                        const bgColor = isAvailable ? '#d4edda' : '#f8d7da';
+                        const textColor = isAvailable ? '#155724' : '#721c24';
+                        const cursor = isAvailable ? 'pointer' : 'not-allowed';
+                        
+                        html += `<div onclick="${isAvailable ? `selectTimeSlot('${slot.date}', '${slot.timeSlot}')` : ''}" 
+                            style="padding: 12px; background: ${bgColor}; color: ${textColor}; border-radius: 6px; 
+                            cursor: ${cursor}; font-size: 13px; text-align: center; border: 2px solid ${isAvailable ? '#c3e6cb' : '#f5c6cb'};">
+                            <div style="font-weight: 600;">${slot.timeSlot}</div>
+                            ${signup ? `<div style="font-size: 11px; margin-top: 4px;">${signup.scout}</div>` : ''}
+                        </div>`;
+                    });
+                    
+                    html += `</div></div>`;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading time slots:', error);
+                container.innerHTML = '<div class="error-message">Error loading time slots. Please refresh.</div>';
+            }
+        }
+        
+        // Select a time slot
+        async function selectTimeSlot(date, timeSlot) {
+            const scoutName = document.getElementById('signup-scout-name').value.trim();
+            const den = document.getElementById('signup-den').value;
+            const messageDiv = document.getElementById('signup-message');
+            
+            if (!scoutName) {
+                showMessage(messageDiv, 'Please enter your name first!', 'error');
+                return;
+            }
+            
+            if (!den) {
+                showMessage(messageDiv, 'Please select your den first!', 'error');
+                return;
+            }
+            
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveSignup',
+                        signup: {
+                            scout: scoutName,
+                            den: den,
+                            date: date,
+                            timeSlot: timeSlot
+                        }
+                    })
+                });
+                
+                showMessage(messageDiv, `✅ Time slot reserved! ${scoutName} is scheduled for ${timeSlot}`, 'success');
+                
+                // Reload time slots to show update
+                await loadTimeSlots();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(messageDiv, '❌ Error reserving time slot. Please try again.', 'error');
+            }
+        }
+        
+        // Fetch signups from Google Sheets
+        async function fetchSignups() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getSignups`);
+                const data = await response.json();
+                return data.signups || [];
+            } catch (error) {
+                console.error('Error fetching signups:', error);
+                return [];
+            }
+        }
+        
+        // Load current scout based on time
+        async function loadCurrentScout() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getCurrentScout`);
+                const data = await response.json();
+                
+                if (data.scout && data.scout.scout) {
+                    document.getElementById('scout-name').value = data.scout.scout;
+                    document.getElementById('scout-den').value = data.scout.den || '';
+                }
+            } catch (error) {
+                console.error('Error loading current scout:', error);
+            }
+        }
         
         // Leaderboard visibility control
         async function isLeaderboardEnabled() {
@@ -611,6 +813,8 @@
             
             if (tabName === 'leaderboard') {
                 updateLeaderboard();
+            } else if (tabName === 'signup') {
+                loadTimeSlots();
             } else if (tabName === 'admin') {
                 const isLoggedIn = sessionStorage.getItem('admin_logged_in') === 'true';
                 if (isLoggedIn) {
@@ -895,6 +1099,7 @@ Need the script code? It will be provided in a separate text file.
                 // Save discovery
                 const discovery = {
                     scout: scoutName,
+                    den: document.getElementById('scout-den').value,
                     rock: rockEntry.name,
                     timestamp: new Date().toISOString()
                 };
