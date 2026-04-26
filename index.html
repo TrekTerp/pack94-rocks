@@ -600,10 +600,7 @@
             
             try {
                 const signups = await fetchSignups();
-                console.log('Loaded signups:', signups);
-                
                 const allSlots = generateTimeSlots();
-                console.log('Generated slots sample:', allSlots[0]);
                 
                 // Group by date
                 const slotsByDate = {};
@@ -626,25 +623,6 @@
                             const signupDate = s.date.includes('T') ? s.date.split('T')[0] : s.date;
                             return signupDate === slot.date && s.timeSlot === slot.timeSlot;
                         });
-                        
-                        if (slot.date === '2025-05-02' && slot.timeSlot.startsWith('8:00')) {
-                            console.log('Checking 8AM slot:', {
-                                slotDate: slot.date,
-                                slotDateType: typeof slot.date,
-                                slotTime: slot.timeSlot,
-                                slotTimeType: typeof slot.timeSlot,
-                                signup: signup,
-                                signups: signups,
-                                signupDetails: signups.map(s => ({
-                                    date: s.date,
-                                    dateType: typeof s.date,
-                                    timeSlot: s.timeSlot,
-                                    timeSlotType: typeof s.timeSlot,
-                                    dateMatch: s.date === slot.date,
-                                    timeMatch: s.timeSlot === slot.timeSlot
-                                }))
-                            });
-                        }
                         
                         const isAvailable = !signup;
                         const bgColor = isAvailable ? '#d4edda' : '#f8d7da';
