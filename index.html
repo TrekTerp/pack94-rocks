@@ -621,7 +621,11 @@
                     html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px;">`;
                     
                     slots.forEach(slot => {
-                        const signup = signups.find(s => s.date === slot.date && s.timeSlot === slot.timeSlot);
+                        // Normalize signup date to handle ISO timestamps
+                        const signup = signups.find(s => {
+                            const signupDate = s.date.includes('T') ? s.date.split('T')[0] : s.date;
+                            return signupDate === slot.date && s.timeSlot === slot.timeSlot;
+                        });
                         
                         if (slot.date === '2025-05-02' && slot.timeSlot.startsWith('8:00')) {
                             console.log('Checking 8AM slot:', {
