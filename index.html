@@ -525,7 +525,7 @@
         const SCRIPT_URL_KEY = 'scouts_script_url';
         const LEADERBOARD_ENABLED_KEY = 'scouts_leaderboard_enabled';
         const DEFAULT_PASSWORD = 'scout123';
-        let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1bKwNrhVE1IYRVmERRpFAZArlBrwkjX7Qa0vsxjxrmqBH-rY3ASode7cRHQxCMHLM/exec';
+        let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-qid3tg40jPXHAXc7Bf4Dv9DqtaohlemqhFSVPJd80tMxc2-guecGktWNDURUO2Oi/exec';
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -626,9 +626,19 @@
                         if (slot.date === '2025-05-02' && slot.timeSlot.startsWith('8:00')) {
                             console.log('Checking 8AM slot:', {
                                 slotDate: slot.date,
+                                slotDateType: typeof slot.date,
                                 slotTime: slot.timeSlot,
+                                slotTimeType: typeof slot.timeSlot,
                                 signup: signup,
-                                signups: signups
+                                signups: signups,
+                                signupDetails: signups.map(s => ({
+                                    date: s.date,
+                                    dateType: typeof s.date,
+                                    timeSlot: s.timeSlot,
+                                    timeSlotType: typeof s.timeSlot,
+                                    dateMatch: s.date === slot.date,
+                                    timeMatch: s.timeSlot === slot.timeSlot
+                                }))
                             });
                         }
                         
