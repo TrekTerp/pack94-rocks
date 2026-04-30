@@ -717,6 +717,7 @@
         
         // Load current scout based on time
         async function loadCurrentScout() {
+            console.log('loadCurrentScout: Starting...');
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
@@ -728,10 +729,14 @@
                     })
                 });
                 const data = await response.json();
+                console.log('loadCurrentScout: Response:', data);
                 
                 if (data.scout && data.scout.scout) {
+                    console.log('loadCurrentScout: Auto-filling:', data.scout.scout, data.scout.den);
                     document.getElementById('scout-name').value = data.scout.scout;
                     document.getElementById('scout-den').value = data.scout.den || '';
+                } else {
+                    console.log('loadCurrentScout: No current scout found');
                 }
             } catch (error) {
                 console.error('Error loading current scout:', error);
