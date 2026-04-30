@@ -730,11 +730,15 @@
                 });
                 const data = await response.json();
                 console.log('loadCurrentScout: Response:', data);
+                console.log('loadCurrentScout: data.scout type:', typeof data.scout);
+                console.log('loadCurrentScout: Full scout object:', JSON.stringify(data.scout));
                 
                 if (data.scout && data.scout.scout) {
                     console.log('loadCurrentScout: Auto-filling:', data.scout.scout, data.scout.den);
                     document.getElementById('scout-name').value = data.scout.scout;
                     document.getElementById('scout-den').value = data.scout.den || '';
+                } else if (data.error) {
+                    console.error('loadCurrentScout: Server error:', data.error);
                 } else {
                     console.log('loadCurrentScout: No current scout found');
                 }
